@@ -1,78 +1,90 @@
---ocrl study DML2 0529
+-- 오라클 DDL
+CREATE TABLE emp01(
+    empno number(4),
+    ename varchar2(20),
+    sal number(7,2)
+);
 
--- INSERT ALL은 하나의 select 결과를 이용하여 두개 이상의 테이블에 데이터를 한번에 삽입할때 사용하는 구문이다,
---여러개의 INTO 절을 작성하여 각각 다른 테이블에 데이터를 삽입할 수 있으며, 필요에 따라 when 조건 then 절을 사용하여
---조건에 따라 다른테이블에 삽입할 수도 있다
+-- all 테이블 조회
+SELECT * FROM tab;
 
-CREATE TABLE EMP_BASIC 
-AS
-SELECT employee_id,first_name,department_id
-FROM employees
-WHERE 1=0;
+SELECT * FROM emp01;
 
-CREATE TABLE EMP_salary
-AS
-SELECT employee_id,salary,commission_pct
-FROM employees
-WHERE 1=0;
+-- CREATE TABLE AS SELECT 문 테이블 복사, 컬럼명,자료형,데이터를 복사 제약 조건은 X
+CREATE TABLE employees01
+AS 
+SELECT * FROM employees;
+-- CREATE TABLE AS SELECT 문 테이블 복사 데이터 없이 가져오기
+-- 조건을 거짓된 조건으로 걸면 해당 조건에 맞는 데이터 없어 컬럼명만 가져온다.
 
--- INSERT ALL를 활용해서 부서번호가 50인 직원의 기본 정보를
---emp_basic, emp_salary 두 테이블에 데이터 삽입
-INSERT ALL
-    INTO emp_basic(employee_id,first_name,department_id)
-    VALUES (employee_id,first_name,department_id)
-    
-    INTO emp_salary(employee_id,salary,commission_pct)
-    VALUES (employee_id,salary,commission_pct)
-    
-SELECT employee_id,first_name,department_id,salary,commission_pct
-FROM employees
-WHERE department_id = 50;
-
---확인용
-SELECT * FROM EMP_BASIC;
-SELECT * FROM EMP_salary;
---INSERT ALL 한 테이블의 컬럼 데이터를 분할 해서 관리할거면 좋을거 같다.
-
---일부러 안되는 조건을 걸어서 구조만 가져온다
-CREATE TABLE emp_old
-AS
-SELECT employee_id,first_name,hire_date,salary
-FROM employees
-WHERE 1=2;
-
-CREATE TABLE emp_new
-as
-SELECT employee_id,first_name,hire_date,salary
-FROM employees
-WHERE 1= 2;
-
-SELECT * FROM emp_old ORDER by hire_date desc;
-SELECT * FROM emp_new ORDER by hire_date;
-
-INSERT ALL
-    when hire_date < date'2006-01-01'then
-    INTO emp_old
-    VALUES (employee_id,first_name,hire_date,salary)
-    
-    when hire_date >= date'2006-01-01'then
-    into emp_new
-    VALUES (employee_id,first_name,hire_date,salary)
-select employee_id,first_name,hire_date,salary
-from employees;
-
-DELETE FROM emp_new;  
+CREATE TABLE employees03
+AS 
+SELECT * FROM employees
+WHERE employee_id < 1
+;
 
 
-SELECT * FROM tb_customer;
+--employees의 테이블은 복사를 했지만 제약 조건은 없음. PK 등
+SELECT * FROM employees01;
 
--- 커밋하면 이거 해도 안사라짐.
-ROLLBACK;
 
-COMMIT;
+--컬럼 추가
+ALTER TABLE emp01
+ADD(job VARCHAR2(9));
+
+
+--컬럼 타입 변경 - 제약 조건도 사용 가능 값을 추가하는데 사용
+-- 이거 데이터 복사하고 제약 조건 넣을때 좋을듯.
+ALTER TABLE emp01
+MODIFY(job VARCHAR2(30) NOT NULL);
+
+
+--컬럼 타입 변경 문제 1
+ALTER TABLE emp01
+MODIFY(job DATE);
+
+--컬럼 삭제
+ALTER TABLE emp01
+DROP COLUMN job;
+
+
+--휴지통 구조파악. 이거 삭제하고 복구 않하면 수업에 차질 발생.
+--그냥 아무 테이블만들어서 쓰자
+desc recyclebin;
+
+
+
+--실수로 지운 테이블이라 삭제를 취소할려면 다음과같은 명령으로 다시 복구
+--FLASHBACK TABLE TABLE_name TO BEFORE DROP; 
+FLASHBACK TABLE emp01 TO BEFORE DROP;
+
+
+--테이블명 변경 RENAME TABLE_old TO TABLE_new;
+RENAME employees02 to employees01;
+
+
+--테이블 구조 파악
+desc emp01;
+
+
+SELECT * FROM employees01;
+
+--*테이블 삭제와 무결성 제약 조건
+--삭제하고자 하는 테이블의 기본 키나 고유 키를 다른 테이블에서 참조해서 사용하는 경우에는
+--해당 테이블을 제거할 수 없다. 이러한 경우에는 참조하는 테이블을 먼저 제거한 후에 해당
+--테이블을 삭제해야 한다.
+
+-- 해당 테이블의 모든 로우를 제거, 롤백 불가 되돌리기가 없다.
+TRUNCATE TABLE employees01;
+
+--컬럼 삭제
+DELETE FROM employees01;
+
+--테이블 삭제
+DROP TABLE employees01;
 
 DROP TABLE TB_CUSTOMER;
-
+--DML 시작--------------------------------------------------------------
 CREATE TABLE TB_CUSTOMER(
     CUSTOMER_ID CHAR(7) NOT NULL PRIMARY KEY,
     CUSTOMER_NAME VARCHAR2(15 char) NOT NULL,
@@ -85,7 +97,7 @@ CREATE TABLE TB_CUSTOMER(
 );
 
 -- 어제는 됨??
---INSERT INTO TB_CUSTOMER VALUES ('2017042','홍길동','M','19810603','010-8202-7496','JAVAUSER@NAVER.COM',283500);
+INSERT INTO TB_CUSTOMER VALUES ('2017042','홍길동','M','19810603','010-8202-7496','JAVAUSER@NAVER.COM',283500);
 
 INSERT INTO TB_CUSTOMER VALUES ('2017042','강원진','M',TO_DATE('19810603','yyyymmdd') ,'010-8202-8790','wjgang@navi.com',280300,SYSDATE);
 --오류 보고 -
@@ -97,194 +109,126 @@ INSERT INTO TB_CUSTOMER VALUES ('2017042','강원진','M',TO_DATE('19810603','yy
 INSERT INTO TB_CUSTOMER VALUES ('2017053','나경숙','W',TO_DATE('19891225','yyyymmdd'),'010-4509-0043','ksna@boram.co.kr',4500,SYSDATE);
 INSERT INTO TB_CUSTOMER VALUES ('2017108','박승대','M',TO_DATE('19710430','yyyymmdd'),NULL,'sdpark@haso.com',23450,SYSDATE);
 
+--날짜 형식 변환
+TO_DATE('19891225','yyyymmdd');
+TO_DATE('19710430','yyyymmdd');
 
-
-
---DUAL 오라클에서 제공하는 단순 계산 결과를 한 번만 출력하는 용도 테이블
-SELECT 12*20 FROM DUAL;
-SELECT SYSDATE FROM DUAL;
-SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') AS NOW FROM DUAL;
-
-
---UPDATE 시작
-
-select * from emp;
-
---새로 만들기
-CREATE TABLE emp
-as
-select * from employees;
-
-drop TABLE emp;
-
---조건이 없어서 전부 바꿈
-update emp
-set department_id = 30;
-
-
-update emp
-set salary = salary*1.1;
-
-update emp
-set hire_date = sysdate;
-
--- 부서번호가 10인 사원들의 부서번호를 30으로 변경
-update emp
-set department_id = 30
-where department_id = 10;
-
--- 급여가 3000이상인 사원만 급여 10%인상
-update emp
-set salary = salary*1.1
-where salary >= 3000;
-
-select * from emp;
-
--- PK 준 컬럼으로 검색 중복값이 없으니...
-select * from emp
-WHERE first_name ='Susan';
-
-UPDATE emp
-SET department_id =20,job_id ='FI_MGR'
-WHERE first_name ='Susan';
-
-select * from emp
-WHERE last_name ='Russell';
-
-UPDATE emp
-SET salary=17000,commission_pct=0.45
-WHERE last_name ='Russell';
-
-
-SELECT * FROM DUAL;
-
-
-DELETE FROM dept 
-WHERE deptno = 30;
-
-
-select * from TB_CUSTOMER;
-
-select * from TB_ADD_CUSTOMER;
-
-CREATE TABLE TB_ADD_CUSTOMER(
-    CUSTOMER_CD CHAR(7 BYTE) NOT NULL,
-    CUSTOMER_NM VARCHAR2(10 BYTE) NOT NULL,
-    GENDER CHAR(1 BYTE) NOT NULL,
-    BIRTH_DAY CHAR(8 BYTE) NOT NULL,
-    PHONE_NUMBER VARCHAR2(16 BYTE),
-    CONSTRAINT TB_ADD_CUSTOMER_CUSTOMER_CD_PK PRIMARY KEY(CUSTOMER_CD)
-);
-
-DROP TABLE TB_ADD_CUSTOMER;
-
-
-
-INSERT INTO TB_ADD_CUSTOMER
-(CUSTOMER_CD,CUSTOMER_NM,tb_add_customer.gender,tb_add_customer.birth_day,tb_add_customer.phone_number)
-VALUES ('2017108','박승대','M','19711230','010-2580-9919');
-
-INSERT INTO TB_ADD_CUSTOMER
-(CUSTOMER_CD,CUSTOMER_NM,tb_add_customer.gender,tb_add_customer.birth_day,tb_add_customer.phone_number)
-VALUES ('2019302','전미래','W','19740812','010-8864-0232');
-    
-INSERT     
-    INTO emp_salary(employee_id,salary,commission_pct)
-    VALUES (employee_id,salary,commission_pct)
-
---MERGE
--- 조건을 비교해서 대상 테이블에 존재하면 수정 없으면 추가하는 SQL문
--- WHEN MATCHED THEN 기준으로 처음에 수정 다음엔 추가
-MERGE INTO TB_CUSTOMER C
-USING 
-TB_ADD_CUSTOMER A   -- 추가 및 수정에 사용할 데이터,원천데이터
-ON(C.CUSTOMER_ID=A.CUSTOMER_CD) -- 대상 테이블과 원천데이터를 비교할 조건
-WHEN MATCHED THEN
- UPDATE SET C.CUSTOMER_NAME=A.CUSTOMER_NM,
-    C.GENDER=A.GENDER,
-    C.BIPTH_DATE=TO_DATE(A.BIPTH_DAY,'YYYYMMDD'),
-    C.PHONE_NUMBER=A.PHONE_NUMBER
-WHEN MATCHED THEN
-    INSERT (
-        CUSTOMER_ID,
-        CUSTOMER_NAME,
-        GENDER,
-        BIPTH_DATE,
-        PHONE_NUMBER
-    ) VALUES (
-        A.CUSTOMER_CD,
-        A.CUSTOMER_NM,
-        A.GENDER,
-        TO_DATE(A.BIRTH_DAY,'YYYYMMDD'),
-        A.PHONE_NUMBER
-        );
-        
-        
-            
-SELECT * FROM TB_CUSTOMER;
-
-
-SELECT * FROM EMP01;
-
-DROP TABLE EMP01;
-
-
-PRIMARY KEY,
-
-CREATE TABLE EMP01(
-    EMPNO NUMBER(4) NOT NULL PRIMARY KEY,
-    ENAME VARCHAR2(10) NOT NULL,
-    JOB VARCHAR2(9),
-    MGRNO NUMBER(4),
-    HIREDATE DATE NOT NULL,
-    SAL NUMBER(7,2) NOT NULL,
-    COMM NUMBER(7,2),
-    DEPTNO NUMBER(2) NOT NULL
-);
-
-INSERT INTO EMP01 VALUES (7369,'SMITH','CLEAK',7839,TO_DATE('2019-12-17'),800,'',20);
-INSERT INTO EMP01 VALUES (7499,'ALLEN','SALESMAN',7839,TO_DATE('2000-12-20'),1600,300,30);
-INSERT INTO EMP01 VALUES (7839,'KING','PRESIDENT','',TO_DATE('1980-02-08'),5000,'',10);
-
-SELECT * FROM EMP01;
-
-DELETE FROM EMP01;
-
---데이터 입력 예제 모음
-
-SELECT * FROM MEMBER;
- 
-INSERT INTO MEMBER VALUES (1,'홍길동',TO_DATE('1970-10-01'),'010-5690-2510','서울특별시 동작구 흑석 3동 140-3');
-INSERT INTO MEMBER VALUES (2,'김철수',TO_DATE('1999-05-28'),'010-7825-1983','평택시 비전 1동 118-36');
-INSERT INTO MEMBER VALUES (3,'이희진',TO_DATE('1995-11-11'),'010-6724-2412','인천광역시 남동구 간석동 264-11');
-
-DELETE FROM MEMBER;
-
-SELECT * FROM BOOK;
-INSERT INTO BOOK VALUES (1001,'마흔에 읽는 쇼펜하우어',7,17000,'유노북스');
-INSERT INTO BOOK VALUES (1002,'삶이 흔들릴 때 뇌과학을 읽습니다',5,18000,'힉스');
-INSERT INTO BOOK VALUES (1003,'무엇이 나를 행복하게 만드는가',10,19200,'북플레저');
-
-COMMIT;
-
-SELECT * FROM BOOK_ORDER;
-DESC BOOK_ORDER;
-
-ALTER TABLE BOOK_ORDER
-MODIFY(ORDER_ID VARCHAR2(20) );
-
-INSERT INTO BOOK_ORDER VALUES ('202411260010001',1,1002,1,SYSDATE);
-INSERT INTO BOOK_ORDER VALUES ('202411260010002',2,1003,1,SYSDATE);
-INSERT INTO BOOK_ORDER VALUES ('202411260010003',2,1001,1,SYSDATE);
-
-SELECT * FROM BOOK_REVIEW;
-
-INSERT INTO BOOK_REVIEW VALUES (1,1,1001,5,'생각을 정리하는데 도움이 되는 책입니다.',SYSDATE);
-INSERT INTO BOOK_REVIEW VALUES (2,2,1002,4,'뇌과학 내용을 쉽게 설명해서 읽기 좋았습니다',SYSDATE);
-INSERT INTO BOOK_REVIEW VALUES (3,3,1003,5,'행복에 대해 다시 생각해 볼 수 있는 책입니다.',SYSDATE);
+DELETE FROM TB_CUSTOMER WHERE CUSTOMER_ID = '2017042';
 
 COMMIT;
 
 
-SELECT * FROM TB_CUSTOMER;
 
+
+ALTER TABLE TB_CUSTOMER
+MODIFY(CREATED_AT DATE DEFAULT SYSDATE NOT NULL);
+
+SELECT * FROM tb_customer;
+
+
+
+DESC TB_CUSTOMER;
+
+select * from tab;
+
+
+
+CREATE TABLE MEMBER(
+    MEMBER_ID NUMBER(20) NOT NULL PRIMARY KEY,
+    MEMBER_NAME VARCHAR2(20) NOT NULL,
+    BIETH_DATE DATE NOT NULL,
+    PHONE_NIMBER VARCHAR2(13) NOT NULL,
+    ADDRESS VARCHAR2(100) NOT NULL
+);
+
+
+
+CREATE TABLE BOOK (
+    BOOK_ID NUMBER(4) NOT NULL PRIMARY KEY,
+    BOOK_TITLE VARCHAR2(100) NOT NULL,
+    STOCK_QUANTITY NUMBER(6) NOT NULL,
+    PRCIE NUMBER(10) NOT NULL,
+    PUBLISHER VARCHAR2(50) NOT NULL
+);
+
+CREATE TABLE BOOK_ORDER(
+    ORDER_ID VARCHAR2(10) NOT NULL PRIMARY KEY,
+    MEMBER_ID NUMBER(20) NOT NULL,
+    BOOK_ID NUMBER(4) NOT NULL,
+    ORDER_QUANTITY NUMBER(6) NOT NULL,
+    ORDER_DATE DATE NOT NULL
+);
+
+CREATE TABLE BOOK_REVIEW(
+    REVIEW_ID NUMBER(10) NOT NULL PRIMARY KEY,
+    MEMBER_ID NUMBER(20) NOT NULL,
+    BOOK_ID NUMBER(4) NOT NULL,
+    RATING NUMBER(1) NOT NULL,
+    REVIEW_CONTENT VARCHAR2(1000) NOT NULL,
+    REVIEW_DATE DATE NOT NULL
+);
+
+CREATE TABLE DEPT (
+    DEPTNO NUMBER(2),
+    DNAME VARCHAR2(14),
+    LOC VARCHAR2(13)
+);
+
+INSERT INTO DEPT VALUES(10,'ACCUNTING','NEW YORK');
+
+
+SELECT * FROM DEPT;
+
+-- 저장
+COMMIT;
+
+--되돌리기
+ROLLBACK;
+
+--< INSERT 오류모음
+
+INSERT INTO DEPT VALUES(10,'ACCUNTING');
+--SQL 오류: ORA-00947: 값의 수가 충분하지 않습니다
+--https://docs.oracle.com/error-help/db/ora-00947/00947. 00000 -  "not enough values"
+
+INSERT INTO DEPT VALUES(10,'ACCUNTING','NEW YORK',20);
+--SQL 오류: ORA-00913: 값의 수가 너무 많습니다
+--https://docs.oracle.com/error-help/db/ora-00913/00913. 00000 -  "too many values"
+
+INSERT INTO DEPT(NUM, DNAME, LOC) VALUES(10,'ACCUNTING','NEW YORK');
+--SQL 오류: ORA-00904: "NUM": 부적합한 식별자
+--https://docs.oracle.com/error-help/db/ora-00904/00904. 00000 -  "%s: invalid identifier"
+
+INSERT INTO DEPT VALUES(10,ACCUNTING,'NEW YORK');
+--SQL 오류: ORA-00984: 열을 사용할 수 없습니다
+--https://docs.oracle.com/error-help/db/ora-00984/00984. 00000 -  "column not allowed here"
+
+-- INSERT 오류모음 -->
+
+
+INSERT INTO DEPT VALUES(20,'RESEATCH','DALLAS');
+
+INSERT INTO DEPT VALUES(20,'RESEATCH','DALLAS');
+
+COMMIT;
+
+
+ALTER TABLE DEPT
+--MODIFY(DEPTNO NUMBER(2) NOT NULL);
+--MODIFY(DNAME VARCHAR2(14) NOT NULL);
+MODIFY(DEPTNO NUMBER(4),DNAME VARCHAR2(30));
+
+
+--NOT NULL 제약 조건이 없어서 NULL값으로 추가 가능
+INSERT INTO DEPT(DEPTNO, DNAME) VALUES(10,'ACCUNTING');
+
+INSERT INTO DEPT VALUES(40,'RESEATCH',NULL);
+
+INSERT INTO DEPT
+SELECT department_id,department_name,location_id FROM departments;
+
+SELECT * FROM DEPT;
+
+DESC DEPT;
+
+--test
