@@ -258,3 +258,102 @@ FROM DUAL;
 이번 학습을 통해 Oracle의 기본 객체 관리, 데이터 조작, 무결성 제약조건, 데이터 조회, JOIN, 데이터 딕셔너리, 시퀀스 사용 방법을 익혔다.
 
 특히 무결성 제약조건과 시퀀스는 데이터의 정확성과 일관성을 유지하기 위한 핵심 기능이며, 향후 Spring Boot와 연동하여 데이터베이스 설계 시 활용할 수 있다.
+
+Oracle 학습 리마인드 - 가상 컬럼 및 제약조건
+1. VIRTUAL COLUMN (가상 컬럼)
+사용 목적
+
+실제 데이터를 저장하지 않고 다른 컬럼 값을 이용하여 계산 결과를 자동 생성한다.
+
+사용 예시
+AVG_SCORE GENERATED ALWAYS AS
+(
+    TRUNC((KOR_SCORE + ENG_SCORE + MATH_SCORE) / 3, 1)
+) VIRTUAL
+특징
+물리적으로 데이터 저장 안 함
+조회 시 자동 계산
+데이터 중복 저장 방지
+계산 로직 일관성 유지
+활용 예시
+국어 : 90
+영어 : 80
+수학 : 70
+
+평균 : 80.0
+2. CHECK 제약조건
+사용 목적
+
+컬럼에 입력 가능한 데이터 범위를 제한한다.
+
+사용 예시
+CONSTRAINT GRADE_MATH_CK
+CHECK(MATH_SCORE BETWEEN 0 AND 100)
+특징
+잘못된 데이터 입력 방지
+업무 규칙(DB Rule) 적용
+데이터 무결성 유지
+입력 가능
+INSERT INTO GRADE
+VALUES (1, 90, 80, 100);
+입력 불가
+INSERT INTO GRADE
+VALUES (1, 90, 80, 120);
+오류
+ORA-02290
+check constraint violated
+3. DESC
+사용 목적
+
+테이블 구조를 빠르게 확인한다.
+
+사용 예시
+DESC EMP02;
+확인 가능 정보
+컬럼명
+데이터 타입
+NULL 허용 여부
+결과 예시
+Name         Null?    Type
+------------ -------- ------------
+EMPNO        NOT NULL NUMBER
+ENAME                 VARCHAR2(20)
+SAL                   NUMBER
+학습 포인트
+
+실무에서 처음 보는 테이블 구조를 파악할 때 가장 먼저 사용하는 명령어 중 하나이다.
+
+4. USER_CONSTRAINTS
+사용 목적
+
+테이블에 설정된 제약조건을 조회한다.
+
+사용 예시
+SELECT constraint_name,
+       constraint_type,
+       table_name
+FROM user_constraints
+WHERE table_name = 'EMP02';
+결과 예시
+CONSTRAINT_NAME    CONSTRAINT_TYPE
+-------------------------------
+EMP02_PK           P
+EMP02_DEPT_FK      R
+EMP02_SAL_CK       C
+제약조건 코드
+코드	의미
+P	PRIMARY KEY
+R	FOREIGN KEY
+U	UNIQUE
+C	CHECK / NOT NULL
+활용
+
+특정 테이블의 무결성 제약조건을 확인하고 테이블 간 관계를 파악할 수 있다.
+
+학습 정리
+VIRTUAL COLUMN : 계산 결과를 자동 생성하는 가상 컬럼
+CHECK : 입력 가능한 데이터 범위 제한
+DESC : 테이블 구조 조회
+USER_CONSTRAINTS : 제약조건 및 무결성 정보 조회
+
+특히 DESC와 USER_CONSTRAINTS는 새로운 테이블을 분석하거나 기존 데이터베이스 구조를 파악할 때 자주 사용하는 명령어이다.
