@@ -357,3 +357,212 @@ DESC : 테이블 구조 조회
 USER_CONSTRAINTS : 제약조건 및 무결성 정보 조회
 
 특히 DESC와 USER_CONSTRAINTS는 새로운 테이블을 분석하거나 기존 데이터베이스 구조를 파악할 때 자주 사용하는 명령어이다.
+
+# 자주 사용하는 Oracle 문법
+
+## 1. CONSTRAINT
+
+### 목적
+
+데이터 무결성을 유지하기 위해 컬럼 또는 테이블에 제약조건을 설정한다.
+
+### PRIMARY KEY
+
+```sql
+CREATE TABLE MEMBER(
+    MEMBER_ID NUMBER,
+    CONSTRAINT MEMBER_PK PRIMARY KEY(MEMBER_ID)
+);
+```
+
+특징
+
+* 중복 불가
+* NULL 불가
+
+---
+
+### FOREIGN KEY
+
+```sql
+CREATE TABLE STUDENT(
+    SD_NUM NUMBER PRIMARY KEY
+);
+
+CREATE TABLE ENROLLMENT(
+    NO NUMBER PRIMARY KEY,
+    SD_NUM NUMBER,
+    CONSTRAINT ENROLLMENT_SD_FK
+        FOREIGN KEY(SD_NUM)
+        REFERENCES STUDENT(SD_NUM)
+);
+```
+
+특징
+
+* 부모 테이블 데이터 참조
+* 테이블 간 관계 설정
+
+---
+
+### UNIQUE
+
+```sql
+EMAIL VARCHAR2(100),
+CONSTRAINT MEMBER_EMAIL_UK UNIQUE(EMAIL)
+```
+
+특징
+
+* 중복 불가
+* NULL 허용
+
+---
+
+### NOT NULL
+
+```sql
+NAME VARCHAR2(30) CONSTRAINT MEMBER_NAME_NN NOT NULL
+```
+
+특징
+
+* 반드시 값 입력
+
+---
+
+## 2. TO_DATE
+
+### 목적
+
+문자열을 날짜 타입(DATE)으로 변환한다.
+
+### 기본 사용
+
+```sql
+TO_DATE('2025-01-01','YYYY-MM-DD')
+```
+
+### INSERT 예시
+
+```sql
+INSERT INTO MEMBER
+VALUES(
+    1,
+    '홍길동',
+    TO_DATE('2000-05-01','YYYY-MM-DD')
+);
+```
+
+### 자주 사용하는 포맷
+
+```sql
+YYYY-MM-DD
+YYYY/MM/DD
+YYYYMMDD
+YYYY-MM-DD HH24:MI:SS
+```
+
+예시
+
+```sql
+TO_DATE('2025-08-11 13:30:00',
+        'YYYY-MM-DD HH24:MI:SS')
+```
+
+---
+
+## 3. CHECK
+
+### 목적
+
+입력 가능한 데이터 범위를 제한한다.
+
+### 점수 제한
+
+```sql
+SCORE NUMBER,
+CONSTRAINT SCORE_CK
+CHECK(SCORE BETWEEN 0 AND 100)
+```
+
+허용
+
+```sql
+50
+80
+100
+```
+
+불가
+
+```sql
+-1
+120
+```
+
+---
+
+### 학점 제한
+
+```sql
+GRADE NUMBER(2,1),
+CONSTRAINT GRADE_CK
+CHECK(GRADE BETWEEN 0 AND 4.5)
+```
+
+허용
+
+```sql
+3.5
+4.0
+4.5
+```
+
+불가
+
+```sql
+5.0
+-1
+```
+
+---
+
+### 특정 값만 허용
+
+```sql
+SEMESTER VARCHAR2(20),
+
+CONSTRAINT SEMESTER_CK
+CHECK(
+    SEMESTER IN
+    ('1학기','2학기','여름학기','겨울학기')
+)
+```
+
+허용
+
+```sql
+1학기
+2학기
+여름학기
+겨울학기
+```
+
+불가
+
+```sql
+3학기
+가을학기
+```
+
+---
+
+## 학습 포인트
+
+* CONSTRAINT : 데이터 무결성 유지
+* TO_DATE : 문자열 → DATE 변환
+* CHECK : 입력 데이터 검증
+* FOREIGN KEY 사용 시 부모 컬럼은 PRIMARY KEY 또는 UNIQUE 필요
+* 날짜 비교 시 문자열보다 DATE 타입 사용 권장
+
