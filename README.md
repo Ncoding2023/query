@@ -566,3 +566,366 @@ CHECK(
 * FOREIGN KEY 사용 시 부모 컬럼은 PRIMARY KEY 또는 UNIQUE 필요
 * 날짜 비교 시 문자열보다 DATE 타입 사용 권장
 
+# Oracle JOIN 학습 정리
+
+## JOIN이란?
+
+두 개 이상의 테이블을 연결하여 원하는 데이터를 조회하는 기법이다.
+
+예를 들어 직원 정보는 EMP 테이블에 있고 부서 정보는 DEPT 테이블에 있을 때, 두 테이블을 연결하여 직원명과 부서명을 함께 조회할 수 있다.
+
+---
+
+# JOIN 작성 방식
+
+## 1. Oracle 전용 방식
+
+FROM 절과 WHERE 절 사용
+
+```sql
+SELECT E.ENAME,
+       D.DNAME
+FROM EMP E,
+     DEPT D
+WHERE E.DEPTNO = D.DEPTNO;
+```
+
+---
+
+## 2. ANSI 표준 방식
+
+JOIN ~ ON 사용
+
+```sql
+SELECT E.ENAME,
+       D.DNAME
+FROM EMP E
+JOIN DEPT D
+ON E.DEPTNO = D.DEPTNO;
+```
+
+현재 실무에서는 ANSI JOIN 사용을 권장한다.
+
+---
+
+# 1. Cross Join
+
+모든 행을 조합하여 조회
+
+### 특징
+
+* Cartesian Product 발생
+* 행 수 = 테이블1 행 수 × 테이블2 행 수
+
+### 예시
+
+```sql
+SELECT *
+FROM EMP
+CROSS JOIN DEPT;
+```
+
+---
+
+# 2. Equi Join
+
+가장 많이 사용하는 조인
+
+### 특징
+
+* "=" 연산자로 조인
+* 동일한 값을 기준으로 연결
+
+### Oracle 방식
+
+```sql
+SELECT E.ENAME,
+       D.DNAME
+FROM EMP E,
+     DEPT D
+WHERE E.DEPTNO = D.DEPTNO;
+```
+
+### ANSI 방식
+
+```sql
+SELECT E.ENAME,
+       D.DNAME
+FROM EMP E
+INNER JOIN DEPT D
+ON E.DEPTNO = D.DEPTNO;
+```
+
+---
+
+# 3. Non-Equi Join
+
+"=" 이 아닌 범위 조건으로 조인
+
+### 특징
+
+* BETWEEN
+* > =
+* <=
+
+등을 사용
+
+### 예시
+
+```sql
+SELECT E.ENAME,
+       E.SAL,
+       S.GRADE
+FROM EMP E,
+     SALGRADE S
+WHERE E.SAL
+BETWEEN S.LOSAL
+    AND S.HISAL;
+```
+
+---
+
+# 4. Outer Join
+
+조인 조건에 만족하지 않는 데이터도 함께 조회
+
+---
+
+## Left Outer Join
+
+왼쪽 테이블 기준
+
+```sql
+SELECT E.ENAME,
+       D.DNAME
+FROM EMP E
+LEFT OUTER JOIN DEPT D
+ON E.DEPTNO = D.DEPTNO;
+```
+
+특징
+
+* EMP는 모두 출력
+* DEPT가 없으면 NULL 표시
+
+---
+
+## Right Outer Join
+
+오른쪽 테이블 기준
+
+```sql
+SELECT E.ENAME,
+       D.DNAME
+FROM EMP E
+RIGHT OUTER JOIN DEPT D
+ON E.DEPTNO = D.DEPTNO;
+```
+
+특징
+
+* DEPT는 모두 출력
+* EMP가 없으면 NULL 표시
+
+---
+
+## Full Outer Join
+
+양쪽 모두 출력
+
+```sql
+SELECT E.ENAME,
+       D.DNAME
+FROM EMP E
+FULL OUTER JOIN DEPT D
+ON E.DEPTNO = D.DEPTNO;
+```
+
+특징
+
+* 양쪽 테이블의 모든 데이터 출력
+
+---
+
+# 5. Self Join
+
+같은 테이블을 자기 자신과 조인
+
+### 특징
+
+* 상사와 사원 관계 조회
+* 조직도 조회
+
+### 예시
+
+```sql
+SELECT E.ENAME AS 사원명,
+       M.ENAME AS 관리자명
+FROM EMP E,
+     EMP M
+WHERE E.MGR = M.EMPNO;
+```
+
+---
+
+# 6. ANSI JOIN
+
+ANSI 표준 JOIN 방식
+
+---
+
+## ANSI Inner Join
+
+```sql
+SELECT *
+FROM EMP
+INNER JOIN DEPT
+ON EMP.DEPTNO = DEPT.DEPTNO;
+```
+
+---
+
+## USING 사용
+
+공통 컬럼명이 같을 경우
+
+```sql
+SELECT *
+FROM EMP
+JOIN DEPT
+USING(DEPTNO);
+```
+
+특징
+
+* 공통 컬럼을 한 번만 작성
+
+---
+
+# ANSI Outer Join
+
+## LEFT OUTER JOIN
+
+```sql
+SELECT *
+FROM EMP
+LEFT OUTER JOIN DEPT
+ON EMP.DEPTNO = DEPT.DEPTNO;
+```
+
+---
+
+## RIGHT OUTER JOIN
+
+```sql
+SELECT *
+FROM EMP
+RIGHT OUTER JOIN DEPT
+ON EMP.DEPTNO = DEPT.DEPTNO;
+```
+
+---
+
+## FULL OUTER JOIN
+
+```sql
+SELECT *
+FROM EMP
+FULL OUTER JOIN DEPT
+ON EMP.DEPTNO = DEPT.DEPTNO;
+```
+
+---
+
+# RPAD 함수
+
+문자열의 길이를 맞추기 위해 사용
+
+### 문법
+
+```sql
+RPAD(값, 자릿수, 채울문자)
+```
+
+### 예시
+
+```sql
+SELECT RPAD(FIRST_NAME, 15, ' ')
+FROM EMPLOYEES;
+```
+
+결과
+
+```text
+홍길동
+김철수
+박영희
+```
+
+뒤에 공백이 자동 추가되어 출력 길이가 동일해진다.
+
+---
+
+## RPAD 주의사항
+
+```sql
+RPAD(FIRST_NAME, 15, '')
+```
+
+Oracle에서는
+
+```sql
+'' = NULL
+```
+
+로 처리한다.
+
+따라서 결과가 NULL이 될 수 있다.
+
+공백을 사용하려면
+
+```sql
+RPAD(FIRST_NAME, 15, ' ')
+```
+
+처럼 작성해야 한다.
+
+---
+
+# 학습 정리
+
+## 실무에서 가장 많이 사용하는 JOIN
+
+### Inner Join
+
+```sql
+JOIN ~ ON
+```
+
+조인 조건에 만족하는 데이터만 조회
+
+---
+
+### Outer Join
+
+```sql
+LEFT OUTER JOIN
+RIGHT OUTER JOIN
+FULL OUTER JOIN
+```
+
+조인 조건에 만족하지 않는 데이터도 함께 조회
+
+---
+
+### 핵심 정리
+
+* Cross Join : 모든 행 조합
+* Equi Join : "=" 조건 조인
+* Non-Equi Join : 범위 조건 조인
+* Outer Join : 조건 불일치 데이터 포함
+* Self Join : 자기 자신과 조인
+* ANSI JOIN : 현재 표준 방식
+* USING : 공통 컬럼명 사용
+* RPAD : 문자열 길이 맞춤
+
