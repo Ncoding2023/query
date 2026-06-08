@@ -104,3 +104,187 @@ INSERT INTO TB_CUSTOMER VALUES ('2017108','박승대','M',TO_DATE('19710430','yy
 SELECT 12*20 FROM DUAL;
 SELECT SYSDATE FROM DUAL;
 SELECT TO_CHAR(SYSDATE, 'YYYY-MM-DD HH24:MI:SS') AS NOW FROM DUAL;
+
+
+--UPDATE 시작
+
+select * from emp;
+
+--새로 만들기
+CREATE TABLE emp
+as
+select * from employees;
+
+drop TABLE emp;
+
+--조건이 없어서 전부 바꿈
+update emp
+set department_id = 30;
+
+
+update emp
+set salary = salary*1.1;
+
+update emp
+set hire_date = sysdate;
+
+-- 부서번호가 10인 사원들의 부서번호를 30으로 변경
+update emp
+set department_id = 30
+where department_id = 10;
+
+-- 급여가 3000이상인 사원만 급여 10%인상
+update emp
+set salary = salary*1.1
+where salary >= 3000;
+
+select * from emp;
+
+-- PK 준 컬럼으로 검색 중복값이 없으니...
+select * from emp
+WHERE first_name ='Susan';
+
+UPDATE emp
+SET department_id =20,job_id ='FI_MGR'
+WHERE first_name ='Susan';
+
+select * from emp
+WHERE last_name ='Russell';
+
+UPDATE emp
+SET salary=17000,commission_pct=0.45
+WHERE last_name ='Russell';
+
+
+SELECT * FROM DUAL;
+
+
+DELETE FROM dept 
+WHERE deptno = 30;
+
+
+select * from TB_CUSTOMER;
+
+select * from TB_ADD_CUSTOMER;
+
+CREATE TABLE TB_ADD_CUSTOMER(
+    CUSTOMER_CD CHAR(7 BYTE) NOT NULL,
+    CUSTOMER_NM VARCHAR2(10 BYTE) NOT NULL,
+    GENDER CHAR(1 BYTE) NOT NULL,
+    BIRTH_DAY CHAR(8 BYTE) NOT NULL,
+    PHONE_NUMBER VARCHAR2(16 BYTE),
+    CONSTRAINT TB_ADD_CUSTOMER_CUSTOMER_CD_PK PRIMARY KEY(CUSTOMER_CD)
+);
+
+DROP TABLE TB_ADD_CUSTOMER;
+
+
+
+INSERT INTO TB_ADD_CUSTOMER
+(CUSTOMER_CD,CUSTOMER_NM,tb_add_customer.gender,tb_add_customer.birth_day,tb_add_customer.phone_number)
+VALUES ('2017108','박승대','M','19711230','010-2580-9919');
+
+INSERT INTO TB_ADD_CUSTOMER
+(CUSTOMER_CD,CUSTOMER_NM,tb_add_customer.gender,tb_add_customer.birth_day,tb_add_customer.phone_number)
+VALUES ('2019302','전미래','W','19740812','010-8864-0232');
+    
+INSERT     
+    INTO emp_salary(employee_id,salary,commission_pct)
+    VALUES (employee_id,salary,commission_pct)
+
+--MERGE
+-- 조건을 비교해서 대상 테이블에 존재하면 수정 없으면 추가하는 SQL문
+-- WHEN MATCHED THEN 기준으로 처음에 수정 다음엔 추가
+MERGE INTO TB_CUSTOMER C
+USING 
+TB_ADD_CUSTOMER A   -- 추가 및 수정에 사용할 데이터,원천데이터
+ON(C.CUSTOMER_ID=A.CUSTOMER_CD) -- 대상 테이블과 원천데이터를 비교할 조건
+WHEN MATCHED THEN
+ UPDATE SET C.CUSTOMER_NAME=A.CUSTOMER_NM,
+    C.GENDER=A.GENDER,
+    C.BIPTH_DATE=TO_DATE(A.BIPTH_DAY,'YYYYMMDD'),
+    C.PHONE_NUMBER=A.PHONE_NUMBER
+WHEN MATCHED THEN
+    INSERT (
+        CUSTOMER_ID,
+        CUSTOMER_NAME,
+        GENDER,
+        BIPTH_DATE,
+        PHONE_NUMBER
+    ) VALUES (
+        A.CUSTOMER_CD,
+        A.CUSTOMER_NM,
+        A.GENDER,
+        TO_DATE(A.BIRTH_DAY,'YYYYMMDD'),
+        A.PHONE_NUMBER
+        );
+        
+        
+            
+SELECT * FROM TB_CUSTOMER;
+
+
+SELECT * FROM EMP01;
+
+DROP TABLE EMP01;
+
+
+PRIMARY KEY,
+
+CREATE TABLE EMP01(
+    EMPNO NUMBER(4) NOT NULL PRIMARY KEY,
+    ENAME VARCHAR2(10) NOT NULL,
+    JOB VARCHAR2(9),
+    MGRNO NUMBER(4),
+    HIREDATE DATE NOT NULL,
+    SAL NUMBER(7,2) NOT NULL,
+    COMM NUMBER(7,2),
+    DEPTNO NUMBER(2) NOT NULL
+);
+
+INSERT INTO EMP01 VALUES (7369,'SMITH','CLEAK',7839,TO_DATE('2019-12-17'),800,'',20);
+INSERT INTO EMP01 VALUES (7499,'ALLEN','SALESMAN',7839,TO_DATE('2000-12-20'),1600,300,30);
+INSERT INTO EMP01 VALUES (7839,'KING','PRESIDENT','',TO_DATE('1980-02-08'),5000,'',10);
+
+SELECT * FROM EMP01;
+
+DELETE FROM EMP01;
+
+--데이터 입력 예제 모음
+
+SELECT * FROM MEMBER;
+ 
+INSERT INTO MEMBER VALUES (1,'홍길동',TO_DATE('1970-10-01'),'010-5690-2510','서울특별시 동작구 흑석 3동 140-3');
+INSERT INTO MEMBER VALUES (2,'김철수',TO_DATE('1999-05-28'),'010-7825-1983','평택시 비전 1동 118-36');
+INSERT INTO MEMBER VALUES (3,'이희진',TO_DATE('1995-11-11'),'010-6724-2412','인천광역시 남동구 간석동 264-11');
+
+DELETE FROM MEMBER;
+
+SELECT * FROM BOOK;
+INSERT INTO BOOK VALUES (1001,'마흔에 읽는 쇼펜하우어',7,17000,'유노북스');
+INSERT INTO BOOK VALUES (1002,'삶이 흔들릴 때 뇌과학을 읽습니다',5,18000,'힉스');
+INSERT INTO BOOK VALUES (1003,'무엇이 나를 행복하게 만드는가',10,19200,'북플레저');
+
+COMMIT;
+
+SELECT * FROM BOOK_ORDER;
+DESC BOOK_ORDER;
+
+ALTER TABLE BOOK_ORDER
+MODIFY(ORDER_ID VARCHAR2(20) );
+
+INSERT INTO BOOK_ORDER VALUES ('202411260010001',1,1002,1,SYSDATE);
+INSERT INTO BOOK_ORDER VALUES ('202411260010002',2,1003,1,SYSDATE);
+INSERT INTO BOOK_ORDER VALUES ('202411260010003',2,1001,1,SYSDATE);
+
+SELECT * FROM BOOK_REVIEW;
+
+INSERT INTO BOOK_REVIEW VALUES (1,1,1001,5,'생각을 정리하는데 도움이 되는 책입니다.',SYSDATE);
+INSERT INTO BOOK_REVIEW VALUES (2,2,1002,4,'뇌과학 내용을 쉽게 설명해서 읽기 좋았습니다',SYSDATE);
+INSERT INTO BOOK_REVIEW VALUES (3,3,1003,5,'행복에 대해 다시 생각해 볼 수 있는 책입니다.',SYSDATE);
+
+COMMIT;
+
+
+SELECT * FROM TB_CUSTOMER;
+
